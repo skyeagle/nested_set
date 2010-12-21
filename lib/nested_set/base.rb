@@ -28,6 +28,7 @@ module CollectiveIdea #:nodoc:
           # * +:parent_column+ - specifies the column name to use for keeping the position integer (default: parent_id)
           # * +:left_column+ - column name for left boundry data, default "lft"
           # * +:right_column+ - column name for right boundry data, default "rgt"
+          # * +:depth_column+ - column name for level cache data, default "depth"
           # * +:scope+ - restricts what is to be considered a list. Given a symbol, it'll attach "_id"
           #   (if it hasn't been already) and use that as the foreign key restriction. You
           #   can also pass an array to scope by multiple attributes.
@@ -45,6 +46,7 @@ module CollectiveIdea #:nodoc:
               :parent_column => 'parent_id',
               :left_column => 'lft',
               :right_column => 'rgt',
+              :depth_column => 'depth',
               :dependent => :delete_all, # or :destroy
             }.merge(options)
 
@@ -287,6 +289,10 @@ module CollectiveIdea #:nodoc:
             Array(acts_as_nested_set_options[:scope])
           end
 
+          def depth_column_name
+            acts_as_nested_set_options[:depth_column]
+          end
+
           def quoted_left_column_name
             connection.quote_column_name(left_column_name)
           end
@@ -301,6 +307,10 @@ module CollectiveIdea #:nodoc:
 
           def quoted_scope_column_names
             scope_column_names.collect {|column_name| connection.quote_column_name(column_name) }
+          end
+          
+          def quoted_depth_column_name
+            connection.quote_column_name(depth_column_name)            
           end
         end
 

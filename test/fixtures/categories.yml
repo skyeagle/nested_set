@@ -14,32 +14,38 @@ top_level:
   name: Top Level
   lft: 1
   rgt: 10
+  depth: 0
 child_1:
   id: 2
   name: Child 1
   parent_id: 1
   lft: 2
   rgt: 3
+  depth: 1
 child_2:
   id: 3
   name: Child 2
   parent_id: 1
   lft: 4
   rgt: 7
+  depth: 1  
 child_2_1:
   id: 4
   name: Child 2.1
   parent_id: 3
   lft: 5
   rgt: 6
+  depth: 2  
 child_3:
   id: 5
   name: Child 3
   parent_id: 1
   lft: 8
   rgt: 9
+  depth: 1  
 top_level_2:
   id: 6
   name: Top Level 2
   lft: 11
   rgt: 12
+  depth: 0

@@ -21,9 +21,12 @@ module CollectiveIdea #:nodoc:
 
         # Update cached_level attribute
         def update_depth
-          self.update_attribute(:depth, level)
+          depth_delta = level - depth 
+          if depth_delta != 0
+            self.self_and_descendants.update_all(["#{self.class.quoted_depth_column_name} = #{self.class.quoted_depth_column_name} + ?", depth_delta])
+          end
         end
-
+        
         # Update cached_level attribute for all record tree
         def update_all_depth
           if depth?

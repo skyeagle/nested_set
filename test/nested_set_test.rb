@@ -15,7 +15,7 @@ class ScopedCategory < ActiveRecord::Base
 end
 
 class RenamedColumns < ActiveRecord::Base
-  acts_as_nested_set :parent_column => 'mother_id', :left_column => 'red', :right_column => 'black'
+  acts_as_nested_set :parent_column => 'mother_id', :left_column => 'red', :right_column => 'black', :depth_column => 'level'
 end
 
 class NestedSetTest < ActiveSupport::TestCase
@@ -32,11 +32,15 @@ class NestedSetTest < ActiveSupport::TestCase
     assert_equal 'parent_id', Default.acts_as_nested_set_options[:parent_column]
   end
 
+  def test_depth_column_default
+    assert_equal 'depth', Default.acts_as_nested_set_options[:depth_column]
+  end
+
   def test_scope_default
     assert_nil Default.acts_as_nested_set_options[:scope]
   end
 
-  def test_left_column_name
+  def test_left_column_default
     assert_equal 'lft', Default.left_column_name
     assert_equal 'lft', Default.new.left_column_name
     assert_equal 'red', RenamedColumns.left_column_name
@@ -57,6 +61,13 @@ class NestedSetTest < ActiveSupport::TestCase
     assert_equal 'mother_id', RenamedColumns.new.parent_column_name
   end
 
+  def test_depth_column_name
+    assert_equal 'depth', Default.depth_column_name
+    assert_equal 'depth', Default.new.depth_column_name
+    assert_equal 'level', RenamedColumns.depth_column_name
+    assert_equal 'level', RenamedColumns.new.depth_column_name
+  end
+
   def test_creation_with_altered_column_names
     assert_nothing_raised do
       RenamedColumns.create!()
@@ -73,6 +84,12 @@ class NestedSetTest < ActiveSupport::TestCase
     quoted = Default.connection.quote_column_name('rgt')
     assert_equal quoted, Default.quoted_right_column_name
     assert_equal quoted, Default.new.quoted_right_column_name
+  end
+
+  def test_quoted_depth_column_name
+    quoted = Default.connection.quote_column_name('depth')
+    assert_equal quoted, Default.quoted_depth_column_name
+    assert_equal quoted, Default.new.quoted_depth_column_name
   end
 
   def test_left_column_protected_from_assignment
@@ -174,6 +191,24 @@ class NestedSetTest < ActiveSupport::TestCase
     assert_equal 2, categories(:child_2_1).level
   end
 
+  def test_depth
+    assert_equal 0, categories(:top_level).depth
+    assert_equal 1, categories(:child_1).depth
+    assert_equal 2, categories(:child_2_1).depth    
+  end
+
+  def test_depth_after_move
+    categories(:child_2).move_to_root
+
+    assert_equal 0, categories(:child_2).reload.depth    
+    assert_equal 1, categories(:child_2_1).reload.depth
+    
+    categories(:child_2).move_to_child_of(categories(:top_level_2))
+
+    assert_equal 1, categories(:child_2).reload.depth    
+    assert_equal 2, categories(:child_2_1).reload.depth
+  end
+  
   def test_has_children?
     assert categories(:child_2_1).children.empty?
     assert !categories(:child_2).children.empty?
