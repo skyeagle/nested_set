@@ -22,6 +22,7 @@ module CollectiveIdea #:nodoc:
         # Update cached_level attribute
         def update_depth
           depth_delta = level - depth
+          self.depth += depth_delta
           if depth_delta != 0
             self.self_and_descendants.update_all(["#{self.class.quoted_depth_column_name} = #{self.class.quoted_depth_column_name} + ?", depth_delta])
           end

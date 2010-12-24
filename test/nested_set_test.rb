@@ -209,6 +209,20 @@ class NestedSetTest < ActiveSupport::TestCase
     assert_equal 2, categories(:child_2_1).reload.depth
   end
 
+  def test_depth_after_moving_sequence
+    categories(:child_2).move_to_root
+
+    assert_equal 0, categories(:child_2).reload.depth
+    assert_equal 1, categories(:child_2_1).reload.depth
+
+    categories(:child_2).move_to_child_of(categories(:top_level_2))
+    categories(:child_1).move_to_child_of(categories(:top_level_2))
+    categories(:child_2).move_to_left_of(categories(:child_1))
+
+    assert_equal 1, categories(:child_2).reload.depth
+    assert_equal 2, categories(:child_2_1).reload.depth
+  end
+  
   def test_has_children?
     assert categories(:child_2_1).children.empty?
     assert !categories(:child_2).children.empty?
