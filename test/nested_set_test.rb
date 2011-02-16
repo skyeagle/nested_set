@@ -147,9 +147,14 @@ class NestedSetTest < ActiveSupport::TestCase
     assert !Category.new.leaf?
   end
 
-
   def test_parent
     assert_equal categories(:child_2), categories(:child_2_1).parent
+  end
+
+  def test_self_and_chilren
+    node = categories(:top_level)
+    self_and_children = [node, categories(:child_1), categories(:child_2), categories(:child_3)]
+    assert_equal self_and_children, node.self_and_children
   end
 
   def test_self_and_ancestors

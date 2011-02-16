@@ -383,6 +383,11 @@ module CollectiveIdea #:nodoc:
             self_and_ancestors.first
           end
 
+          # Returns the array of all children and self
+          def self_and_children
+            nested_set_scope.scoped.where("#{q_parent} = ? or id = ?", id, id)
+          end
+
           # Returns the array of all parents and self
           def self_and_ancestors
             nested_set_scope.scoped.where("#{q_left} <= ? AND #{q_right} >= ?", left, right)
@@ -509,6 +514,10 @@ module CollectiveIdea #:nodoc:
 
           def q_right
             "#{self.class.quoted_table_name}.#{quoted_right_column_name}"
+          end
+
+          def q_parent
+            "#{self.class.quoted_table_name}.#{quoted_parent_column_name}"
           end
 
           def without_self(scope)
