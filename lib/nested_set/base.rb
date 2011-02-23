@@ -143,6 +143,7 @@ module CollectiveIdea #:nodoc:
             insertion_points = [arranged]
             depth = 0
             order("#{quoted_table_name}.#{quoted_left_column_name}").each_with_level do |node, level|
+              next if level > depth && insertion_points.last.keys.last && node.parent_id != insertion_points.last.keys.last.id
               insertion_points.push insertion_points.last.values.last if level > depth
               (depth - level).times { insertion_points.pop } if level < depth
               insertion_points.last.merge! node => ActiveSupport::OrderedHash.new
