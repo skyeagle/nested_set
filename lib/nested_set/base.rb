@@ -25,6 +25,7 @@ module CollectiveIdea #:nodoc:
         module SingletonMethods
           # Configuration options are:
           #
+          # * +:primary_key_column+ - specifies the column name to use for keeping the position integer (default: id)
           # * +:parent_column+ - specifies the column name to use for keeping the position integer (default: parent_id)
           # * +:left_column+ - column name for left boundry data, default "lft"
           # * +:right_column+ - column name for right boundry data, default "rgt"
@@ -43,6 +44,7 @@ module CollectiveIdea #:nodoc:
           # to acts_as_nested_set models
           def acts_as_nested_set(options = {})
             options = {
+              :primary_key_column => 'id',
               :parent_column => 'parent_id',
               :left_column => 'lft',
               :right_column => 'rgt',
@@ -284,7 +286,7 @@ module CollectiveIdea #:nodoc:
             end
 
             def order_for_rebuild
-              "#{quoted_left_column_name}, #{quoted_right_column_name}, id"
+              "#{quoted_left_column_name}, #{quoted_right_column_name}, #{primary_key_column_name}"
             end
 
         end
@@ -309,6 +311,10 @@ module CollectiveIdea #:nodoc:
 
           def depth_column_name
             acts_as_nested_set_options[:depth_column]
+          end
+
+          def primary_key_column_name
+            acts_as_nested_set_options[:primary_key_column]
           end
 
           def quoted_left_column_name
