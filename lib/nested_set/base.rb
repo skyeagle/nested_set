@@ -56,8 +56,8 @@ module CollectiveIdea #:nodoc:
               options[:scope] = "#{options[:scope]}_id".intern
             end
 
-            write_inheritable_attribute :acts_as_nested_set_options, options
-            class_inheritable_reader :acts_as_nested_set_options
+            class_attribute :acts_as_nested_set_options
+            self.acts_as_nested_set_options = options
 
             unless self.is_a?(ClassMethods)
               include Comparable
