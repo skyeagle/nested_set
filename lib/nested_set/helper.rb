@@ -113,7 +113,7 @@ module CollectiveIdea #:nodoc:
         #     <%= child %>
         #   <% end %>
         #
-        def render_tree hash,tag = :ul , options = {}, &block
+        def render_tree(hash,tag = :ul , options = {}, &block)
           sort_proc = options.delete :sort
           content_tag tag.to_sym, options do
             hash.keys.sort_by(&sort_proc).each do |node|
