@@ -113,11 +113,11 @@ module CollectiveIdea #:nodoc:
         #     <%= child %>
         #   <% end %>
         #
-        def render_tree hash, options = {}, &block
+        def render_tree hash,tag = :ul , options = {}, &block
           sort_proc = options.delete :sort
-          content_tag :ul, options do
+          content_tag tag, options do
             hash.keys.sort_by(&sort_proc).each do |node|
-              block.call node, render_tree(hash[node], :sort => sort_proc, &block)
+              block.call node, render_tree(hash[node], tag ,:sort => sort_proc, &block)
             end
           end if hash.present?
         end
