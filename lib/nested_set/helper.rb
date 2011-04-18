@@ -99,6 +99,7 @@ module CollectiveIdea #:nodoc:
         #
         # == Params
         #  * +hash+ - Hash or arranged nodes, i.e. Category.arranged
+        #  * +tag+ - Selected tag to use for root node. Default: ul
         #  * +options+ - HTML options for root ul node.
         #    Given options with ex. :sort => lambda{|x| x.name}
         #    you allow node sorting by analogy with sorted_nested_set_options helper method
