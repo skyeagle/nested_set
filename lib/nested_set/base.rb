@@ -478,6 +478,11 @@ module CollectiveIdea #:nodoc:
             siblings.where("#{q_left} > ?", left).first
           end
 
+          # Lock rows whose lfts and rgts are to be updated
+          def lock_check(cond=nil)
+            nested_set_scope.select(primary_key_column_name).where(cond).lock
+          end
+
           # Shorthand method for finding the left sibling and moving to the left of it.
           def move_left
             move_to_left_of left_sibling
@@ -576,9 +581,9 @@ module CollectiveIdea #:nodoc:
           # back to the left so the counts still work.
           def destroy_descendants
             return if right.nil? || left.nil? || skip_before_destroy
-            reload_nested_set
-
             self.class.base_class.transaction do
+              lock_check(["#{quoted_right_column_name} > ?", right])
+              reload_nested_set
               if acts_as_nested_set_options[:dependent] == :destroy
                 descendants.each do |model|
                   model.skip_before_destroy = true
@@ -650,11 +655,8 @@ module CollectiveIdea #:nodoc:
                 a, b, c, d = [self[left_column_name], self[right_column_name], bound, other_bound].sort
 
                 # select the rows in the model between a and d, and apply a lock
-                self.class.base_class.find(:all,
-                  :select => primary_key_column_name,
-                  :conditions => ["#{quoted_left_column_name} >= :a and #{quoted_right_column_name} <= :d", {:a => a, :d => d}],
-                  :lock => true
-                )
+                cond = ["#{quoted_left_column_name} >= :a and #{quoted_right_column_name} <= :d", { :a => a, :d => d }]
+                lock_check(cond)
 
                 new_parent = case position
                   when :child;  target.id
