@@ -118,7 +118,7 @@ class HelperTest < ActionView::TestCase
       ['Child 2', 3],
       ['Child 2.1', 4]
     ]
-    actual = nested_set_options Category_NoToArray.find(3) do |c|
+    actual = nested_set_options Category_NoToArray.find(3) do |c, l|
       c.name
     end
     assert_equal expected, actual
