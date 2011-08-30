@@ -684,6 +684,17 @@ class NestedSetTest < ActiveSupport::TestCase
     assert Category.valid?
   end
 
+  def test_custom_destroy_method_does_not_invalidate
+    Category_WithCustomDestroy.acts_as_nested_set_options[:dependent] = :custom_destroy
+    Category_WithCustomDestroy.find_by_name('Child 2').custom_destroy
+    assert Category_WithCustomDestroy.valid?
+  end
+
+  def test_custom_destroy_raises_an_error_if_method_does_not_exist
+    Category.acts_as_nested_set_options[:dependent] = :custom_destroy
+    assert_raise(NoMethodError) { categories(:child_2).destroy }
+  end
+
   def test_assigning_parent_id_on_create
     category = Category.create!(:name => "Child", :parent_id => categories(:child_2).id)
     assert_equal categories(:child_2), category.parent

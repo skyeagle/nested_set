@@ -24,3 +24,13 @@ end
 class Category_DefaultScope < Category
   default_scope order('categories.id ASC')
 end
+
+class Category_WithCustomDestroy < ActiveRecord::Base
+  set_table_name 'categories'
+  acts_as_nested_set
+
+  private :destroy
+  def custom_destroy
+    destroy
+  end
+end

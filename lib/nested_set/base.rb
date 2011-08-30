@@ -584,13 +584,16 @@ module CollectiveIdea #:nodoc:
             self.class.base_class.transaction do
               lock_check(["#{quoted_right_column_name} > ?", right])
               reload_nested_set
-              if acts_as_nested_set_options[:dependent] == :destroy
-                descendants.each do |model|
-                  model.skip_before_destroy = true
-                  model.destroy
-                end
-              else
-                nested_set_scope.delete_all(["#{q_left} > ? AND #{q_right} < ?", left, right])
+              case destroy_method
+                when :delete_all then
+                  nested_set_scope.delete_all(["#{q_left} > ? AND #{q_right} < ?", left, right])
+
+                else
+                  descendants.each do |model|
+                    model.skip_before_destroy = true
+                    model.respond_to?(destroy_method) ? model.send(destroy_method) : raise(NoMethodError, "#{model} does not have a method #{destroy_method}")
+                  end
+
               end
 
               # update lefts and rights for remaining nodes
@@ -607,6 +610,11 @@ module CollectiveIdea #:nodoc:
               # Don't allow multiple calls to destroy to corrupt the set
               self.skip_before_destroy = true
             end
+          end
+
+          # just a shortcut
+          def destroy_method
+            acts_as_nested_set_options[:dependent]
           end
 
           # reload left, right, and parent
