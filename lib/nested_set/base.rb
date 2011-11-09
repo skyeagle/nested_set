@@ -470,7 +470,7 @@ module CollectiveIdea #:nodoc:
 
           # Find the first sibling to the left
           def left_sibling
-            siblings.where("#{q_left} < ?", left).reverse_order.first
+            siblings.where("#{q_left} < ?", left).last
           end
 
           # Find the first sibling to the right
