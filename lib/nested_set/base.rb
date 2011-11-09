@@ -401,12 +401,12 @@ module CollectiveIdea #:nodoc:
 
           # Returns the array of all children and self
           def self_and_children
-            nested_set_scope.scoped.where("#{q_parent} = ? or id = ?", id, id)
+            nested_set_scope.where("#{q_parent} = ? or id = ?", id, id)
           end
 
           # Returns the array of all parents and self
           def self_and_ancestors
-            nested_set_scope.scoped.where("#{q_left} <= ? AND #{q_right} >= ?", left, right)
+            nested_set_scope.where("#{q_left} <= ? AND #{q_right} >= ?", left, right)
           end
 
           # Returns an array of all parents
@@ -416,7 +416,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns the array of all children of the parent, including self
           def self_and_siblings
-            nested_set_scope.scoped.where(parent_column_name => parent_id)
+            nested_set_scope.where(parent_column_name => parent_id)
           end
 
           # Returns the array of all children of the parent, except self
@@ -426,7 +426,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns a set of all of its nested children which do not have children
           def leaves
-            descendants.scoped.where("#{q_right} - #{q_left} = 1")
+            descendants.where("#{q_right} - #{q_left} = 1")
           end
 
           # Returns the level of this object in the tree
@@ -437,7 +437,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns a set of itself and all of its nested children
           def self_and_descendants
-            nested_set_scope.scoped.where("#{q_left} >= ? AND #{q_right} <= ?", left, right)
+            nested_set_scope.where("#{q_left} >= ? AND #{q_right} <= ?", left, right)
           end
 
           # Returns a set of all of its children and nested children
