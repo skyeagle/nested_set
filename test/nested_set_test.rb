@@ -6,11 +6,13 @@ end
 
 class Default < ActiveRecord::Base
   set_table_name 'categories'
+  set_primary_key :not_default_id_name
   acts_as_nested_set
 end
 
 class ScopedCategory < ActiveRecord::Base
   set_table_name 'categories'
+  set_primary_key :not_default_id_name
   acts_as_nested_set :scope => :organization
 end
 

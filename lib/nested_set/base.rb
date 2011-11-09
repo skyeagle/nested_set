@@ -49,7 +49,7 @@ module CollectiveIdea #:nodoc:
               :left_column => 'lft',
               :right_column => 'rgt',
               :depth_column => 'depth',
-              :dependent => :delete_all, # or :destroy
+              :dependent => :delete_all
             }.merge(options)
 
             if options[:scope].is_a?(Symbol) && options[:scope].to_s !~ /_id$/
@@ -345,6 +345,10 @@ module CollectiveIdea #:nodoc:
           def quoted_depth_column_name
             connection.quote_column_name(depth_column_name)
           end
+
+          def quoted_primary_key_column_name
+            connection.quote_column_name(primary_key_column_name)
+          end
         end
 
         # Any instance method that returns a collection makes use of Rails 2.1's named_scope (which is bundled for Rails 2.0), so it can be treated as a finder.
@@ -401,7 +405,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns the array of all children and self
           def self_and_children
-            nested_set_scope.where("#{q_parent} = ? or id = ?", id, id)
+            nested_set_scope.where("#{q_parent} = :id or #{q_primary_key} = :id", :id => self)
           end
 
           # Returns the array of all parents and self
@@ -541,8 +545,12 @@ module CollectiveIdea #:nodoc:
             "#{self.class.quoted_table_name}.#{quoted_parent_column_name}"
           end
 
+          def q_primary_key
+            "#{self.class.quoted_table_name}.#{quoted_primary_key_column_name}"
+          end
+
           def without_self(scope)
-            scope.where("#{self.class.quoted_table_name}.#{self.class.primary_key} != ?", self)
+            scope.where("#{q_primary_key} != ?", self)
           end
 
           # All nested set queries should use this nested_set_scope, which performs finds on
