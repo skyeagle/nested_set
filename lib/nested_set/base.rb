@@ -173,7 +173,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def no_duplicates_for_columns?
-            scope_string = Array(acts_as_nested_set_options[:scope]).map do |c|
+            scope_string = scope_column_names.map do |c|
               connection.quote_column_name(c)
             end.push(nil).join(", ")
             [quoted_left_column_name, quoted_right_column_name].all? do |column|
@@ -463,7 +463,7 @@ module CollectiveIdea #:nodoc:
 
           # Check if other model is in the same scope
           def same_scope?(other)
-            Array(acts_as_nested_set_options[:scope]).all? do |attr|
+            scope_column_names.all? do |attr|
               self.send(attr) == other.send(attr)
             end
           end
@@ -549,7 +549,7 @@ module CollectiveIdea #:nodoc:
           # the base ActiveRecord class, using the :scope declared in the acts_as_nested_set
           # declaration.
           def nested_set_scope
-            conditions = Array(acts_as_nested_set_options[:scope]).inject({}) do |cnd, attr|
+            conditions = scope_column_names.inject({}) do |cnd, attr|
               cnd.merge attr => self[attr]
             end
 
