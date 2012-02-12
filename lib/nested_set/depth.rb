@@ -15,7 +15,7 @@ module CollectiveIdea #:nodoc:
         end
 
 
-        def depth?
+        def has_depth_column?
           respond_to?(depth_column_name)
         end
 
@@ -31,7 +31,7 @@ module CollectiveIdea #:nodoc:
 
         # Update cached_level attribute for all record tree
         def update_all_depth
-          if depth?
+          if has_depth_column?
             self.class.connection.execute("UPDATE #{self.class.quoted_table_name} a SET a.depth = \
                 (SELECT count(*) - 1 FROM (SELECT * FROM #{self.class.quoted_table_name} WHERE #{scope_condition}) AS b \
               	WHERE #{scope_condition('a')} AND \
