@@ -701,7 +701,7 @@ module CollectiveIdea #:nodoc:
               end
               target.reload_nested_set if target
               self.reload_nested_set
-              self.update_depth if depth?
+              self.update_depth if has_depth_column?
             end
           end
         end
