@@ -1,3 +1,5 @@
+[![Build Status](https://secure.travis-ci.org/skyeagle/nested_set.png)](http://travis-ci.org/skyeagle/nested_set)
+
 # NestedSet
 
 Nested Set is an implementation of the nested set pattern for ActiveRecord models. It is replacement for acts_as_nested_set and BetterNestedSet, but awesomer. It supports Rails 3.0 and later.

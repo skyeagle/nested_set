@@ -5,14 +5,14 @@ class Note < ActiveRecord::Base
 end
 
 class Default < ActiveRecord::Base
-  set_table_name 'categories'
-  set_primary_key :not_default_id_name
+  self.table_name = 'categories'
+  self.primary_key = 'not_default_id_name'
   acts_as_nested_set
 end
 
 class ScopedCategory < ActiveRecord::Base
-  set_table_name 'categories'
-  set_primary_key :not_default_id_name
+  self.table_name = 'categories'
+  self.primary_key = 'not_default_id_name'
   acts_as_nested_set :scope => :organization
 end
 
@@ -836,7 +836,7 @@ class NestedSetTest < ActiveSupport::TestCase
 
   def test_model_with_attr_accessible
     model = Class.new(ActiveRecord::Base)
-    model.set_table_name 'categories'
+    model.table_name = 'categories'
     model.attr_accessible :name
     assert_nothing_raised do
       model.acts_as_nested_set

@@ -1,11 +1,11 @@
 class Category < ActiveRecord::Base
-  set_primary_key :not_default_id_name
+  self.primary_key = 'not_default_id_name'
   acts_as_nested_set
-  
+
   def to_s
     name
   end
-  
+
   def recurse(&block)
     block.call self, lambda{
       self.children.each do |child|
@@ -27,8 +27,8 @@ class Category_DefaultScope < Category
 end
 
 class Category_WithCustomDestroy < ActiveRecord::Base
-  set_table_name 'categories'
-  set_primary_key :not_default_id_name
+  self.table_name = 'categories'
+  self.primary_key = 'not_default_id_name'
   acts_as_nested_set
 
   private :destroy
