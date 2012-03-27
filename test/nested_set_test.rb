@@ -138,6 +138,13 @@ class NestedSetTest < ActiveSupport::TestCase
     assert Category.leaves.include?(categories(:top_level_2))
   end
 
+  def test_nodes_class_method
+    assert_equal Category.find(:all, :conditions => "(#{Category.right_column_name} - #{Category.left_column_name} - 1) / 2 != 0"), Category.nodes
+    assert_equal Category.nodes.count, 2
+    assert Category.nodes.include?(categories(:top_level))
+    assert Category.nodes.include?(categories(:child_2))
+  end
+
   def test_leaf
     assert categories(:child_1).leaf?
     assert categories(:child_2_1).leaf?

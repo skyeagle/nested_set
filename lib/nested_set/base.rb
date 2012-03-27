@@ -103,6 +103,10 @@ module CollectiveIdea #:nodoc:
                 where("#{quoted_right_column_name} - #{quoted_left_column_name} = 1").
                 order(quoted_left_column_name)
               }
+              scope :nodes, lambda {
+                where("(#{quoted_right_column_name} - #{quoted_left_column_name} - 1) / 2 != 0").
+                order(quoted_left_column_name)
+              }
               scope :with_depth, proc {|level| where(:"#{depth_column_name}" => level).order(quoted_left_column_name) }
 
               define_callbacks :move, :terminator => "result == false"
