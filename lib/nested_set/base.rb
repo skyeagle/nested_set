@@ -286,7 +286,7 @@ module CollectiveIdea #:nodoc:
             end
 
             def nodes_for_rebuild(node, node_scope)
-              where(parent_column_name => node).
+              where(parent_column_name => node.id).
                 where(node_scope).
                 order(order_for_rebuild).
                 all
