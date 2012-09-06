@@ -22,7 +22,9 @@ module CollectiveIdea #:nodoc:
         # Update cached_level attribute
         def update_depth
           send :"#{depth_column_name}=", level
-          if depth_changed?
+          depth_changed = send :"#{depth_column_name}_changed?"
+          if depth_changed
+            depth_change = send :"#{depth_column_name}_change"
             self.self_and_descendants.
               update_all(["#{self.class.quoted_depth_column_name} = COALESCE(#{self.class.quoted_depth_column_name}, 0) + ?",
                 depth_change[1] - depth_change[0].to_i])
