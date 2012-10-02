@@ -106,7 +106,7 @@ class HelperTest < ActionView::TestCase
   end
 
   def test_sorted_render_tree
-    html = render_tree(Category.arrange, :sort => lambda{|x| -x.id}) do |category, child|
+    html = render_tree(Category.arrange, { :tag => :ul, :sort => lambda{|x| -x.id} }) do |category, child|
       concat content_tag(:li, category)
       concat child
     end
