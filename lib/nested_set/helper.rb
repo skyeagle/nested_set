@@ -99,7 +99,6 @@ module CollectiveIdea #:nodoc:
         #
         # == Params
         #  * +hash+ - Hash or arranged nodes, i.e. Category.arranged
-        #  * +tag+ - Selected tag to use for root node. Default: ul
         #  * +options+ - HTML options for root ul node.
         #    Given options with ex. :sort => lambda{|x| x.name}
         #    you allow node sorting by analogy with sorted_nested_set_options helper method
@@ -114,11 +113,14 @@ module CollectiveIdea #:nodoc:
         #     <%= child %>
         #   <% end %>
         #
-        def render_tree(hash,tag = :ul , options = {}, &block)
+        def render_tree(hash, options = {}, &block)
+          tag = options[:tag] || :ul
           sort_proc = options.delete :sort
+          options.delete :tag
+
           content_tag tag, options do
             hash.keys.sort_by(&sort_proc).each do |node|
-              block.call node, render_tree(hash[node], tag ,:sort => sort_proc, &block)
+              block.call node, render_tree(hash[node], :sort => sort_proc, &block)
             end
           end if hash.present?
         end
