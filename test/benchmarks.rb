@@ -4,14 +4,11 @@ if $0 == __FILE__
 
   $:.unshift(plugin_test_dir + '/../lib')
 
-  #require 'logger'
-  require 'active_support'
-  require 'active_record'
+  require 'rails/all'
   require 'nested_set'
   require 'bench_press'
 
-
-  CollectiveIdea::Acts::NestedSet::Railtie.extend_active_record
+  CollectiveIdea::Acts::NestedSet::Railtie.extend_active_record!
   #ActiveRecord::Base.logger = Logger.new(plugin_test_dir + "/debug.log")
   ActiveRecord::Base.configurations = YAML::load(IO.read(plugin_test_dir + "/db/database.yml"))
   ActiveRecord::Base.establish_connection(ENV["DB"] || "sqlite3mem")

@@ -1,6 +1,7 @@
 ActiveRecord::Schema.define(:version => 0) do
 
-  create_table :categories, :force => true do |t|
+  create_table :categories, :force => true, :id => false do |t|
+    t.primary_key :not_default_id_name
     t.column :name, :string
     t.column :parent_id, :integer
     t.column :lft, :integer

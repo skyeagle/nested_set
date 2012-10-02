@@ -49,7 +49,7 @@ module CollectiveIdea #:nodoc:
               :left_column => 'lft',
               :right_column => 'rgt',
               :depth_column => 'depth',
-              :dependent => :delete_all, # or :destroy
+              :dependent => :delete_all
             }.merge(options)
 
             if options[:scope].is_a?(Symbol) && options[:scope].to_s !~ /_id$/
@@ -103,7 +103,11 @@ module CollectiveIdea #:nodoc:
                 where("#{quoted_right_column_name} - #{quoted_left_column_name} = 1").
                 order(quoted_left_column_name)
               }
-              scope :with_depth, proc {|level| where(:depth => level).order(quoted_left_column_name) }
+              scope :nodes, lambda {
+                where("(#{quoted_right_column_name} - #{quoted_left_column_name} - 1) / 2 != 0").
+                order(quoted_left_column_name)
+              }
+              scope :with_depth, proc {|level| where(:"#{depth_column_name}" => level).order(quoted_left_column_name) }
 
               define_callbacks :move, :terminator => "result == false"
             end
@@ -173,7 +177,7 @@ module CollectiveIdea #:nodoc:
           end
 
           def no_duplicates_for_columns?
-            scope_string = Array(acts_as_nested_set_options[:scope]).map do |c|
+            scope_string = scope_column_names.map do |c|
               connection.quote_column_name(c)
             end.push(nil).join(", ")
             [quoted_left_column_name, quoted_right_column_name].all? do |column|
@@ -222,7 +226,7 @@ module CollectiveIdea #:nodoc:
               nodes_for_rebuild(node, node_scope).each{ |n| set_left_and_rights.call(n) }
               # set right
               node[right_column_name] = indices[node_scope] += 1
-              node.save!
+              node.save(:validate => false)
             end
 
             # Find root node(s)
@@ -282,7 +286,7 @@ module CollectiveIdea #:nodoc:
             end
 
             def nodes_for_rebuild(node, node_scope)
-              where(parent_column_name => node).
+              where(parent_column_name => node.id).
                 where(node_scope).
                 order(order_for_rebuild).
                 all
@@ -345,6 +349,10 @@ module CollectiveIdea #:nodoc:
           def quoted_depth_column_name
             connection.quote_column_name(depth_column_name)
           end
+
+          def quoted_primary_key_column_name
+            connection.quote_column_name(primary_key_column_name)
+          end
         end
 
         # Any instance method that returns a collection makes use of Rails 2.1's named_scope (which is bundled for Rails 2.0), so it can be treated as a finder.
@@ -401,12 +409,12 @@ module CollectiveIdea #:nodoc:
 
           # Returns the array of all children and self
           def self_and_children
-            nested_set_scope.scoped.where("#{q_parent} = ? or id = ?", id, id)
+            nested_set_scope.where("#{q_parent} = :id or #{q_primary_key} = :id", :id => self)
           end
 
           # Returns the array of all parents and self
           def self_and_ancestors
-            nested_set_scope.scoped.where("#{q_left} <= ? AND #{q_right} >= ?", left, right)
+            nested_set_scope.where("#{q_left} <= ? AND #{q_right} >= ?", left, right)
           end
 
           # Returns an array of all parents
@@ -416,7 +424,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns the array of all children of the parent, including self
           def self_and_siblings
-            nested_set_scope.scoped.where(parent_column_name => parent_id)
+            nested_set_scope.where(parent_column_name => parent_id)
           end
 
           # Returns the array of all children of the parent, except self
@@ -426,7 +434,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns a set of all of its nested children which do not have children
           def leaves
-            descendants.scoped.where("#{q_right} - #{q_left} = 1")
+            descendants.where("#{q_right} - #{q_left} = 1")
           end
 
           # Returns the level of this object in the tree
@@ -437,7 +445,7 @@ module CollectiveIdea #:nodoc:
 
           # Returns a set of itself and all of its nested children
           def self_and_descendants
-            nested_set_scope.scoped.where("#{q_left} >= ? AND #{q_right} <= ?", left, right)
+            nested_set_scope.where("#{q_left} >= ? AND #{q_right} <= ?", left, right)
           end
 
           # Returns a set of all of its children and nested children
@@ -463,19 +471,24 @@ module CollectiveIdea #:nodoc:
 
           # Check if other model is in the same scope
           def same_scope?(other)
-            Array(acts_as_nested_set_options[:scope]).all? do |attr|
+            scope_column_names.all? do |attr|
               self.send(attr) == other.send(attr)
             end
           end
 
           # Find the first sibling to the left
           def left_sibling
-            siblings.where("#{q_left} < ?", left).reverse_order.first
+            siblings.where("#{q_left} < ?", left).last
           end
 
           # Find the first sibling to the right
           def right_sibling
             siblings.where("#{q_left} > ?", left).first
+          end
+
+          # Lock rows whose lfts and rgts are to be updated
+          def lock_check(cond=nil)
+            nested_set_scope.select(primary_key_column_name).where(cond).lock
           end
 
           # Shorthand method for finding the left sibling and moving to the left of it.
@@ -536,15 +549,19 @@ module CollectiveIdea #:nodoc:
             "#{self.class.quoted_table_name}.#{quoted_parent_column_name}"
           end
 
+          def q_primary_key
+            "#{self.class.quoted_table_name}.#{quoted_primary_key_column_name}"
+          end
+
           def without_self(scope)
-            scope.where("#{self.class.quoted_table_name}.#{self.class.primary_key} != ?", self)
+            scope.where("#{q_primary_key} != ?", self)
           end
 
           # All nested set queries should use this nested_set_scope, which performs finds on
           # the base ActiveRecord class, using the :scope declared in the acts_as_nested_set
           # declaration.
           def nested_set_scope
-            conditions = Array(acts_as_nested_set_options[:scope]).inject({}) do |cnd, attr|
+            conditions = scope_column_names.inject({}) do |cnd, attr|
               cnd.merge attr => self[attr]
             end
 
@@ -576,16 +593,19 @@ module CollectiveIdea #:nodoc:
           # back to the left so the counts still work.
           def destroy_descendants
             return if right.nil? || left.nil? || skip_before_destroy
-            reload_nested_set
-
             self.class.base_class.transaction do
-              if acts_as_nested_set_options[:dependent] == :destroy
-                descendants.each do |model|
-                  model.skip_before_destroy = true
-                  model.destroy
-                end
-              else
-                nested_set_scope.delete_all(["#{q_left} > ? AND #{q_right} < ?", left, right])
+              lock_check(["#{quoted_right_column_name} > ?", right])
+              reload_nested_set
+              case destroy_method
+                when :delete_all then
+                  nested_set_scope.delete_all(["#{q_left} > ? AND #{q_right} < ?", left, right])
+
+                else
+                  descendants.each do |model|
+                    model.skip_before_destroy = true
+                    model.respond_to?(destroy_method) ? model.send(destroy_method) : raise(NoMethodError, "#{model} does not have a method #{destroy_method}")
+                  end
+
               end
 
               # update lefts and rights for remaining nodes
@@ -602,6 +622,11 @@ module CollectiveIdea #:nodoc:
               # Don't allow multiple calls to destroy to corrupt the set
               self.skip_before_destroy = true
             end
+          end
+
+          # just a shortcut
+          def destroy_method
+            acts_as_nested_set_options[:dependent]
           end
 
           # reload left, right, and parent
@@ -650,11 +675,8 @@ module CollectiveIdea #:nodoc:
                 a, b, c, d = [self[left_column_name], self[right_column_name], bound, other_bound].sort
 
                 # select the rows in the model between a and d, and apply a lock
-                self.class.base_class.find(:all,
-                  :select => primary_key_column_name,
-                  :conditions => ["#{quoted_left_column_name} >= :a and #{quoted_right_column_name} <= :d", {:a => a, :d => d}],
-                  :lock => true
-                )
+                cond = ["#{quoted_left_column_name} >= :a and #{quoted_right_column_name} <= :d", { :a => a, :d => d }]
+                lock_check(cond)
 
                 new_parent = case position
                   when :child;  target.id
@@ -683,7 +705,7 @@ module CollectiveIdea #:nodoc:
               end
               target.reload_nested_set if target
               self.reload_nested_set
-              self.update_depth if depth?
+              self.update_depth if has_depth_column?
             end
           end
         end

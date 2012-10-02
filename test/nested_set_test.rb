@@ -5,13 +5,15 @@ class Note < ActiveRecord::Base
 end
 
 class Default < ActiveRecord::Base
+  self.table_name = 'categories'
+  self.primary_key = 'not_default_id_name'
   acts_as_nested_set
-  set_table_name 'categories'
 end
 
 class ScopedCategory < ActiveRecord::Base
+  self.table_name = 'categories'
+  self.primary_key = 'not_default_id_name'
   acts_as_nested_set :scope => :organization
-  set_table_name 'categories'
 end
 
 class RenamedColumns < ActiveRecord::Base
@@ -136,6 +138,13 @@ class NestedSetTest < ActiveSupport::TestCase
     assert Category.leaves.include?(categories(:top_level_2))
   end
 
+  def test_nodes_class_method
+    assert_equal Category.find(:all, :conditions => "(#{Category.right_column_name} - #{Category.left_column_name} - 1) / 2 != 0"), Category.nodes
+    assert_equal Category.nodes.count, 2
+    assert Category.nodes.include?(categories(:top_level))
+    assert Category.nodes.include?(categories(:child_2))
+  end
+
   def test_leaf
     assert categories(:child_1).leaf?
     assert categories(:child_2_1).leaf?
@@ -197,21 +206,19 @@ class NestedSetTest < ActiveSupport::TestCase
   end
 
   def test_depth
-    assert_equal 0, categories(:top_level).depth
+    assert_equal nil, categories(:top_level).depth
     assert_equal 1, categories(:child_1).depth
     assert_equal 2, categories(:child_2_1).depth
   end
 
   def test_depth_after_move
-    categories(:child_2).move_to_root
-
-    assert_equal 0, categories(:child_2).depth
-    assert_equal 1, categories(:child_2_1).depth
-
-    categories(:child_2).move_to_child_of(categories(:top_level_2))
-
+    assert_equal nil, categories(:top_level).depth
     assert_equal 1, categories(:child_2).depth
-    assert_equal 2, categories(:child_2_1).reload.depth
+
+    categories(:top_level).move_to_child_of(categories(:top_level_2))
+
+    assert_equal 1, categories(:top_level).reload.depth
+    assert_equal 2, categories(:child_2).reload.depth
   end
 
   def test_has_children?
@@ -686,6 +693,17 @@ class NestedSetTest < ActiveSupport::TestCase
     assert Category.valid?
   end
 
+  def test_custom_destroy_method_does_not_invalidate
+    Category_WithCustomDestroy.acts_as_nested_set_options[:dependent] = :custom_destroy
+    Category_WithCustomDestroy.find_by_name('Child 2').custom_destroy
+    assert Category_WithCustomDestroy.valid?
+  end
+
+  def test_custom_destroy_raises_an_error_if_method_does_not_exist
+    Category.acts_as_nested_set_options[:dependent] = :custom_destroy
+    assert_raise(NoMethodError) { categories(:child_2).destroy }
+  end
+
   def test_assigning_parent_id_on_create
     category = Category.create!(:name => "Child", :parent_id => categories(:child_2).id)
     assert_equal categories(:child_2), category.parent
@@ -825,7 +843,7 @@ class NestedSetTest < ActiveSupport::TestCase
 
   def test_model_with_attr_accessible
     model = Class.new(ActiveRecord::Base)
-    model.set_table_name 'categories'
+    model.table_name = 'categories'
     model.attr_accessible :name
     assert_nothing_raised do
       model.acts_as_nested_set

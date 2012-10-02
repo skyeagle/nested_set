@@ -1,21 +1,22 @@
+ENV["RAILS_ENV"] ||= "test"
+
 plugin_test_dir = File.dirname(__FILE__)
 
 $:.unshift(plugin_test_dir + '/../lib')
 
 require 'rubygems'
 require 'test/unit'
-require 'logger'
-require 'active_support'
-require 'active_support/test_case'
-require 'active_record'
-require 'action_pack'
-require 'action_view'
-require 'action_view/base'
-require 'action_view/template/handlers/erb'
-require 'action_view/test_case'
+require 'rails/all'
+if Rails.version < '3.1.0'
+  require 'action_view/base'
+  require 'action_view/template/handlers/erb'
+end
 require 'nested_set'
 
-CollectiveIdea::Acts::NestedSet::Railtie.extend_active_record
+class NestedSetApplication < Rails::Application
+end
+
+CollectiveIdea::Acts::NestedSet::Railtie.extend_active_record!
 
 ActiveRecord::Base.logger = Logger.new(plugin_test_dir + "/debug.log")
 

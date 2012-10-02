@@ -24,3 +24,4 @@ test/debug.log
 rdoc
 *.sw?
 .bundle
+Gemfile.lock

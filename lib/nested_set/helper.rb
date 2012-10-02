@@ -23,7 +23,7 @@ module CollectiveIdea #:nodoc:
         #
         #   <%= f.select :parent_id, nested_set_options(Category, @category) {|i, level|
         #       "#{'–' * level} #{i.name}"
-        #     }) %>
+        #     } %>
         #
         def nested_set_options(class_or_items, mover = nil, options = {})
           items = case
