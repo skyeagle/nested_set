@@ -115,7 +115,9 @@ module CollectiveIdea #:nodoc:
         #
         def render_tree hash, options = {}, &block
           sort_proc = options.delete :sort
-          content_tag :ul, options do
+          tag = options.delete(:tag) || :ul
+
+          content_tag tag, options do
             hash.keys.sort_by(&sort_proc).each do |node|
               block.call node, render_tree(hash[node], :sort => sort_proc, &block)
             end
