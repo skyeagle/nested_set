@@ -98,7 +98,7 @@ module CollectiveIdea #:nodoc:
         # Recursively render arranged nodes hash
         #
         # == Params
-        #  * +hash+ - Hash or arranged nodes, i.e. Category.arranged
+        #  * +hash+ - Hash or arranged nodes, i.e. Category.arrange
         #  * +options+ - HTML options for root ul node.
         #    Given options with ex. :sort => lambda{|x| x.name}
         #    you allow node sorting by analogy with sorted_nested_set_options helper method
@@ -106,7 +106,7 @@ module CollectiveIdea #:nodoc:
         #
         # == Usage
         #
-        #   arranged_nodes = Category.arranged
+        #   arranged_nodes = Category.arrange
         #
         #   <%= render_tree arranged_nodes do |node, child| %>
         #     <li><%= node.name %></li>
