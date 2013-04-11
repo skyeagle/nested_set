@@ -29,7 +29,7 @@ module CollectiveIdea #:nodoc:
           items = case
           when class_or_items.is_a?(Class)
             class_or_items.roots
-          when class_or_items.is_a?(Array)
+          when class_or_items.respond_to?(:each)
             class_or_items
           else
             [class_or_items]
