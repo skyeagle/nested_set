@@ -18,7 +18,35 @@ class HelperTest < ActionView::TestCase
     end
     assert_equal expected, actual
   end
+  
+  def test_nested_set_options_from_a_query_with_roots_filter 
+    expected = [
+      [" Top Level", 1],
+	  ["- Child 1", 2],
+	  ["- Child 2", 3],
+	  ["-- Child 2.1", 4],
+	  ["- Child 3", 5],
+      [" Top Level 2", 6]
+    ]
+    actual = nested_set_options(Category.roots) do |c, level|
+      "#{'-' * level} #{c.name}"
+    end
+    assert_equal expected, actual
+  end
 
+  def test_nested_set_options_from_one_node 
+    expected = [
+      [" Top Level", 1],
+	  ["- Child 1", 2],
+	  ["- Child 2", 3],
+	  ["-- Child 2.1", 4],
+	  ["- Child 3", 5]
+    ]
+    actual = nested_set_options(Category.find 1) do |c, level|
+      "#{'-' * level} #{c.name}"
+    end
+    assert_equal expected, actual
+  end
   def test_nested_set_options_without_root
     expected = [
       [" Child 1", 2],
